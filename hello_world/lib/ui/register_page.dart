@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:hello_world/ui/login_page.dart';
 
 class RegisterPage extends StatelessWidget {
   final firstNameController = TextEditingController();
@@ -20,7 +22,6 @@ class RegisterPage extends StatelessWidget {
             padding: EdgeInsets.only(left: 30, right: 30),
             child: Column(
               children: [
-                Container(height: 100),
                 Image(
                   width: 100,
                   image: AssetImage('assets/images/ic_logo.png'),
@@ -127,10 +128,32 @@ class RegisterPage extends StatelessWidget {
                     onPressed: () => _doRegister(),
                     child: Text('Register'),
                   ),
+                ),
+                Container(height: 20),
+                RichText(
+                  text: TextSpan(
+                    text: 'If you have an account, ',
+                    style: TextStyle(fontSize: 15, color: Colors.black),
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: 'Login now!',
+                          recognizer: new TapGestureRecognizer()
+                            ..onTap = () => _goToLoginPage(context),
+                          style: TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline)),
+                    ],
+                  ),
                 )
               ],
             )));
   }
 
   _doRegister() {}
+
+  _goToLoginPage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => LoginPage()),
+    );
+  }
 }

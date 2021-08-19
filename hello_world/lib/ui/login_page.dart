@@ -77,6 +77,7 @@ class LoginPage extends StatelessWidget {
                     child: Text('Login'),
                   ),
                 ),
+                Container(height: 20),
                 RichText(
                   text: TextSpan(
                     text: 'If you do not have an account, ',
