@@ -1,4 +1,7 @@
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:hello_world/ui/register_page.dart';
 
 class LoginPage extends StatelessWidget {
   final emailController = TextEditingController();
@@ -9,8 +12,8 @@ class LoginPage extends StatelessWidget {
     final ButtonStyle styleButton =
         ElevatedButton.styleFrom(textStyle: TextStyle(fontSize: 20));
 
-
     return Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: Text('Login'),
         ),
@@ -73,6 +76,21 @@ class LoginPage extends StatelessWidget {
                     onPressed: () => _doLogin(),
                     child: Text('Login'),
                   ),
+                ),
+                RichText(
+                  text: TextSpan(
+                    text: 'If you do not have an account, ',
+                    style: TextStyle(fontSize: 15, color: Colors.black),
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: 'Register now!',
+                          recognizer: new TapGestureRecognizer()
+                            ..onTap = () => _goToRegisterPage(context),
+                          style: TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline)),
+                    ],
+                  ),
                 )
               ],
             )));
@@ -82,5 +100,11 @@ class LoginPage extends StatelessWidget {
     var emailValue = emailController.text;
     var passwordValue = passwordController.text;
     print('Email: $emailValue - Pass: $passwordValue');
+  }
+
+  _goToRegisterPage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => RegisterPage()),
+    );
   }
 }
