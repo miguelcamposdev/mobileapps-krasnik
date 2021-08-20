@@ -4,16 +4,34 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hello_world/ui/main_page.dart';
 import 'package:hello_world/ui/register_page.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
+
   final passwordController = TextEditingController();
+
   FirebaseAuth auth;
 
   _initFirebase() async {
     await Firebase.initializeApp();
     auth = FirebaseAuth.instance;
+
+    FirebaseAuth.instance.authStateChanges().listen((User user) {
+      if (user == null) {
+        print('User is currently signed out!');
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => MainPage()),
+        );
+      }
+    });
   }
 
   Future<UserCredential> signInWithGoogle() async {
@@ -26,7 +44,7 @@ class LoginPage extends StatelessWidget {
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
-    return await FirebaseAuth.instance.signInWithCredential(credential);
+    await FirebaseAuth.instance.signInWithCredential(credential);
   }
 
   @override
