@@ -16,7 +16,7 @@ class RegisterPage extends StatelessWidget {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text('Login'),
+          title: Text('Register'),
         ),
         body: Container(
             padding: EdgeInsets.only(left: 30, right: 30),
@@ -152,7 +152,7 @@ class RegisterPage extends StatelessWidget {
   _doRegister() {}
 
   _goToLoginPage(BuildContext context) {
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => LoginPage()),
     );
   }

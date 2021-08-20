@@ -1,14 +1,37 @@
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hello_world/ui/register_page.dart';
 
 class LoginPage extends StatelessWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  FirebaseAuth auth;
+
+  _initFirebase() async {
+    await Firebase.initializeApp();
+    auth = FirebaseAuth.instance;
+  }
+
+  Future<UserCredential> signInWithGoogle() async {
+    final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
+
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+    return await FirebaseAuth.instance.signInWithCredential(credential);
+  }
 
   @override
   Widget build(BuildContext context) {
+    _initFirebase();
     final ButtonStyle styleButton =
         ElevatedButton.styleFrom(textStyle: TextStyle(fontSize: 20));
 
@@ -77,6 +100,12 @@ class LoginPage extends StatelessWidget {
                     child: Text('Login'),
                   ),
                 ),
+                Container(
+                    width: double.infinity,
+                    child: SignInButton(
+                      Buttons.Google,
+                      onPressed: () => signInWithGoogle(),
+                    )),
                 Container(height: 20),
                 RichText(
                   text: TextSpan(
@@ -104,7 +133,7 @@ class LoginPage extends StatelessWidget {
   }
 
   _goToRegisterPage(BuildContext context) {
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => RegisterPage()),
     );
   }
