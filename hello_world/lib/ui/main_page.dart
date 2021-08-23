@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hello_world/ui/login_page.dart';
+import 'package:hello_world/ui/new_player_page.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -51,6 +52,15 @@ class _MainPageState extends State<MainPage> {
       body: Center(
         child: _widgetPages.elementAt(_selectedIndex),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => NewPlayerPage()),
+          );
+        },
+        child: const Icon(Icons.add),
+        backgroundColor: Colors.orange,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -94,14 +104,13 @@ class _MainPageState extends State<MainPage> {
         return ListView(
           children: snapshot.data.docs.map((DocumentSnapshot document) {
             Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-            return Row(
-              children: [
-                SizedBox(
-                  width: 100,
-                  child: Image(image: NetworkImage(data['photo'])),
-                ),
-                Text(data['name'])
-              ]);
+            return Row(children: [
+              SizedBox(
+                width: 100,
+                child: Image(image: NetworkImage(data['photo'])),
+              ),
+              Text(data['name'])
+            ]);
           }).toList(),
         );
       },
