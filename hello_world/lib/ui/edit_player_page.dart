@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class NewPlayerPage extends StatefulWidget {
+class EditPlayerPage extends StatefulWidget {
+  final String playerId;
+
+  EditPlayerPage({Key key, @required this.playerId}): super(key: key);
+
   @override
-  _NewPlayerPageState createState() => _NewPlayerPageState();
+  _EditPlayerPageState createState() => _EditPlayerPageState();
+  
 }
 
-class _NewPlayerPageState extends State<NewPlayerPage> {
+class _EditPlayerPageState extends State<EditPlayerPage> {
   final nameController = TextEditingController();
   final ButtonStyle styleButton =
       ElevatedButton.styleFrom(textStyle: TextStyle(fontSize: 20));
@@ -20,7 +25,7 @@ class _NewPlayerPageState extends State<NewPlayerPage> {
     return Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: Text('New player'),
+          title: Text('Edit player'),
         ),
         body: Container(
             width: double.infinity,

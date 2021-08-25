@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:hello_world/ui/edit_player_page.dart';
 import 'package:hello_world/ui/login_page.dart';
 import 'package:hello_world/ui/new_player_page.dart';
 
@@ -17,9 +18,6 @@ class _MainPageState extends State<MainPage> {
 
   _doLogout() async {
     await FirebaseAuth.instance.signOut();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => LoginPage()),
-    );
   }
 
   void _onItemTapped(int index) {
@@ -46,20 +44,12 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('SoccerApp'),
       ),
       body: Center(
         child: _widgetPages.elementAt(_selectedIndex),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => NewPlayerPage()),
-          );
-        },
-        child: const Icon(Icons.add),
-        backgroundColor: Colors.orange,
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -101,19 +91,48 @@ class _MainPageState extends State<MainPage> {
           return Text("Loading");
         }
 
-        return ListView(
-          children: snapshot.data.docs.map((DocumentSnapshot document) {
-            Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-            return Row(children: [
-              SizedBox(
-                width: 100,
-                child: Image(image: NetworkImage(data['photo'])),
-              ),
-              Text(data['name'])
-            ]);
-          }).toList(),
-        );
+        return Container(
+            width: double.infinity,
+            child: Column(children: [
+              Expanded(flex: 5, child:
+              ListView(
+                children: snapshot.data.docs.map((DocumentSnapshot document) {
+                  Map<String, dynamic> data =
+                      document.data() as Map<String, dynamic>;
+                  return Row(children: [
+                    data['photo'] != null
+                        ? SizedBox(
+                            width: 100,
+                            child: Image(image: NetworkImage(data['photo'])),
+                          )
+                        : Icon(Icons.camera, size: 100),
+                    Column(children: [
+                      Text(data['name']),
+                      Text('Rate: ${data['rate']}')
+                    ]),
+                    Padding(
+                        padding: EdgeInsets.all(20),
+                        child: InkWell(
+                            onTap: () => _navigateToEditPlayer(document.id),
+                            child: Icon(Icons.edit)))
+                  ]);
+                }).toList(),
+              )),
+              Expanded(flex: 1, child:
+              ElevatedButton(
+                onPressed: () {},
+                child: Icon(Icons.add),
+              ))
+            ]));
       },
     );
+  }
+
+  _navigateToEditPlayer(String id) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => EditPlayerPage(playerId: id)),
+      );
+    });
   }
 }
