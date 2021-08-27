@@ -81,10 +81,13 @@ class _GamePageState extends State<GamePage> {
               } else {
                 p1Name = data['player1'];
                 p2Name = data['player2'];
-                for(var i = 0; i<9; i++) {
+                for (var i = 0; i < 9; i++) {
                   selectedCells[i] = data['cells'][i];
                 }
                 title = '$p1Name VS $p2Name';
+                yourTurn = data['playerPlaying'] == playerNumber;
+                gameOver = data['gameOver'];
+                if(gameOver) _showWinnerDialog();
                 return _widgetGameDashboard();
               }
             },
@@ -94,12 +97,12 @@ class _GamePageState extends State<GamePage> {
 
   _widgetGameLoading(String player1Name) {
     return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-      Text('Hi $player1Name, we are waiting another player. Be patient!',
-      textAlign: TextAlign.center,
-      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Text(
+        'Hi $player1Name, we are waiting another player. Be patient!',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+            color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
       ),
       Container(height: 20),
       CircularProgressIndicator(color: Colors.white)
@@ -169,15 +172,15 @@ class _GamePageState extends State<GamePage> {
     var cellValue = selectedCells[position];
     if (cellValue == 0) {
       return GestureDetector(
-          onTap: () => !gameOver ? _changeCellValue(position) : null,
+          onTap: () => !gameOver && yourTurn ? _changeCellValue(position) : null,
           child: SvgPicture.asset('assets/ic_empty_cell.svg'));
     } else if (cellValue == 1) {
       return GestureDetector(
-          onTap: () => !gameOver ? _changeCellValue(position) : null,
+          onTap: () => !gameOver  && yourTurn ? _changeCellValue(position) : null,
           child: SvgPicture.asset('assets/ic_player_1.svg'));
     } else if (cellValue == 2) {
       return GestureDetector(
-          onTap: () => !gameOver ? _changeCellValue(position) : null,
+          onTap: () => !gameOver  && yourTurn ? _changeCellValue(position) : null,
           child: SvgPicture.asset('assets/ic_player_2.svg'));
     }
   }
@@ -185,22 +188,34 @@ class _GamePageState extends State<GamePage> {
   _changeCellValue(int position) {
     setState(() {
       if (selectedCells[position] == 0) {
-
         if (playerNumber == 1) {
           selectedCells[position] = 1;
         } else {
           selectedCells[position] = 2;
         }
 
-        CollectionReference games = FirebaseFirestore.instance.collection('games');
-        games.doc(widget.gameId).set({'cells': selectedCells},
-            SetOptions(merge: true)).then((value2) {});
+        CollectionReference games =
+            FirebaseFirestore.instance.collection('games');
 
         if (_checkSolution()) {
-          _showWinnerDialog();
           gameOver = true;
+
+          games.doc(widget.gameId).set(
+              {'cells': selectedCells, 'gameOver': true},
+              SetOptions(merge: true)).then((value2) {
+            _showWinnerDialog();
+          });
         } else {
-          player1IsPlaying = !player1IsPlaying;
+          games.doc(widget.gameId).set({
+            'cells': selectedCells,
+            'playerPlaying': !yourTurn
+                ? playerNumber
+                : playerNumber == 1
+                    ? 2
+                    : 1
+          }, SetOptions(merge: true)).then((value2) {
+            yourTurn = !yourTurn;
+          });
         }
       }
     });
@@ -252,8 +267,8 @@ class _GamePageState extends State<GamePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: player1IsPlaying
-              ? Text('Player 1 wins!')
-              : Text('Player 2 wins!'),
+              ? Text('$p1Name wins!')
+              : Text('$p2Name wins!'),
           content: SingleChildScrollView(
             child: ListBody(
               children: [SvgPicture.asset('assets/medal.svg', height: 100)],

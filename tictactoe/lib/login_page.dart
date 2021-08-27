@@ -101,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
           'player2': '',
           'cells': [0, 0, 0, 0, 0, 0, 0, 0, 0],
           'gameOver': false,
-          'player1IsPlaying': true
+          'playerPlaying': 1
         }).then((newGame) {
           Navigator.pushReplacement(
             context,
