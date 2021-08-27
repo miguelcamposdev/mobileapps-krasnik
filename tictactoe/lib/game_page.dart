@@ -1,8 +1,16 @@
+import 'dart:html';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class GamePage extends StatefulWidget {
+  final String gameId;
+  final bool isYourTurn;
+
+  GamePage({required this.gameId, required this.isYourTurn});
+
   @override
   _GamePageState createState() => _GamePageState();
 }
@@ -22,76 +30,126 @@ class _GamePageState extends State<GamePage> {
 
   //                         0 1 2 3 4 5 6 7 8
   List<int> selectedCells = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-  var yourTurn = true;
+  var yourTurn = false;
   var player1IsPlaying = true;
   var gameOver = false;
+  var title = "";
+  var playerNumber;
+  var _loading = true;
+
+  @override
+  void initState() {
+    yourTurn = widget.isYourTurn;
+    if (yourTurn) {
+      playerNumber = 1;
+    } else {
+      playerNumber = 2;
+    }
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final Stream<DocumentSnapshot> _gameStream = FirebaseFirestore.instance
+        .collection('games')
+        .doc(widget.gameId)
+        .snapshots();
+
     return Scaffold(
       body: Container(
           padding: EdgeInsets.only(top: 100, left: 20, right: 20, bottom: 20),
           color: Colors.blue,
           width: double.infinity,
           height: double.infinity,
-          child: Column(children: [
+          child: StreamBuilder<DocumentSnapshot>(
+            stream: _gameStream,
+            builder: (BuildContext context,
+                AsyncSnapshot<DocumentSnapshot> snapshot) {
+              if (snapshot.hasError) {
+                return Text('Something went wrong');
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Text('Loading');
+
+              }
+
+              var gameInformation = snapshot.data!;
+              Map<String, dynamic> data = gameInformation.data()! as Map<String, dynamic>;
+              if(data['player2'] == "") {
+                return _widgetGameLoading();
+              } else {
+                return _widgetGameDashboard();
+              }
+            },
+          )),
+    );
+  }
+
+  _widgetGameLoading() {
+    return CircularProgressIndicator(
+      color: Colors.white,
+    );
+  }
+
+  _widgetGameDashboard() {
+    return Column(children: [
+      Expanded(
+          flex: 1,
+          child: Text('Miguel VS Kuba',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.pressStart2p(
+                  textStyle: TextStyle(color: Colors.white, fontSize: 20)))),
+      Expanded(
+          flex: 3,
+          child: Row(children: [
             Expanded(
                 flex: 1,
-                child: Text('Miguel VS Kuba',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.pressStart2p(
-                        textStyle:
-                            TextStyle(color: Colors.white, fontSize: 20)))),
+                child: Padding(
+                    padding: EdgeInsets.all(5), child: _getCellImage(0))),
             Expanded(
-                flex: 3,
-                child: Row(children: [
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: EdgeInsets.all(5), child: _getCellImage(0))),
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: EdgeInsets.all(5), child: _getCellImage(1))),
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: EdgeInsets.all(5), child: _getCellImage(2)))
-                ])),
+                flex: 1,
+                child: Padding(
+                    padding: EdgeInsets.all(5), child: _getCellImage(1))),
             Expanded(
-                flex: 3,
-                child: Row(children: [
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: EdgeInsets.all(5), child: _getCellImage(3))),
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: EdgeInsets.all(5), child: _getCellImage(4))),
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: EdgeInsets.all(5), child: _getCellImage(5)))
-                ])),
-            Expanded(
-                flex: 3,
-                child: Row(children: [
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: EdgeInsets.all(5), child: _getCellImage(6))),
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: EdgeInsets.all(5), child: _getCellImage(7))),
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: EdgeInsets.all(5), child: _getCellImage(8)))
-                ])),
+                flex: 1,
+                child: Padding(
+                    padding: EdgeInsets.all(5), child: _getCellImage(2)))
           ])),
-    );
+      Expanded(
+          flex: 3,
+          child: Row(children: [
+            Expanded(
+                flex: 1,
+                child: Padding(
+                    padding: EdgeInsets.all(5), child: _getCellImage(3))),
+            Expanded(
+                flex: 1,
+                child: Padding(
+                    padding: EdgeInsets.all(5), child: _getCellImage(4))),
+            Expanded(
+                flex: 1,
+                child: Padding(
+                    padding: EdgeInsets.all(5), child: _getCellImage(5)))
+          ])),
+      Expanded(
+          flex: 3,
+          child: Row(children: [
+            Expanded(
+                flex: 1,
+                child: Padding(
+                    padding: EdgeInsets.all(5), child: _getCellImage(6))),
+            Expanded(
+                flex: 1,
+                child: Padding(
+                    padding: EdgeInsets.all(5), child: _getCellImage(7))),
+            Expanded(
+                flex: 1,
+                child: Padding(
+                    padding: EdgeInsets.all(5), child: _getCellImage(8)))
+          ])),
+    ]);
   }
 
   _getCellImage(int position) {
@@ -119,7 +177,7 @@ class _GamePageState extends State<GamePage> {
         } else {
           selectedCells[position] = 2;
         }
-        
+
         if (_checkSolution()) {
           _showWinnerDialog();
           gameOver = true;
@@ -175,12 +233,12 @@ class _GamePageState extends State<GamePage> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          title: player1IsPlaying? Text('Player 1 wins!'): Text('Player 2 wins!'),
+          title: player1IsPlaying
+              ? Text('Player 1 wins!')
+              : Text('Player 2 wins!'),
           content: SingleChildScrollView(
             child: ListBody(
-              children: [
-                SvgPicture.asset('assets/medal.svg', height: 100)
-              ],
+              children: [SvgPicture.asset('assets/medal.svg', height: 100)],
             ),
           ),
           actions: <Widget>[
@@ -200,9 +258,9 @@ class _GamePageState extends State<GamePage> {
     // Reset the variables to initial value: gameOver, selectedCells,...
     gameOver = false;
     player1IsPlaying = true;
-    for (var i=0; i<9; i++) {
+    for (var i = 0; i < 9; i++) {
       setState(() {
-          selectedCells[i] = 0;    
+        selectedCells[i] = 0;
       });
     }
 

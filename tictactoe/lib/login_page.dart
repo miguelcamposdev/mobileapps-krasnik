@@ -91,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
             SetOptions(merge: true)).then((value2) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => GamePage()),
+            MaterialPageRoute(builder: (context) => GamePage(gameId: gameFound.id, isYourTurn: false)),
           );
         }).catchError((error) => print("Failed to add user to game: $error"));
       } else {
@@ -102,10 +102,10 @@ class _LoginPageState extends State<LoginPage> {
           'cells': [0, 0, 0, 0, 0, 0, 0, 0, 0],
           'gameOver': false,
           'player1IsPlaying': true
-        }).then((value2) {
+        }).then((newGame) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => GamePage()),
+            MaterialPageRoute(builder: (context) => GamePage(gameId: newGame.id, isYourTurn: true)),
           );
         }).catchError((error) => print("Failed to add user to game: $error"));
       }
