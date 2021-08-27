@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -35,7 +33,8 @@ class _GamePageState extends State<GamePage> {
   var gameOver = false;
   var title = "";
   var playerNumber;
-  var _loading = true;
+  var p1Name = "";
+  var p2Name = "";
 
   @override
   void initState() {
@@ -72,14 +71,20 @@ class _GamePageState extends State<GamePage> {
 
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Text('Loading');
-
               }
 
               var gameInformation = snapshot.data!;
-              Map<String, dynamic> data = gameInformation.data()! as Map<String, dynamic>;
-              if(data['player2'] == "") {
-                return _widgetGameLoading();
+              Map<String, dynamic> data =
+                  gameInformation.data()! as Map<String, dynamic>;
+              if (data['player2'] == "") {
+                return _widgetGameLoading(data['player1']);
               } else {
+                p1Name = data['player1'];
+                p2Name = data['player2'];
+                for(var i = 0; i<9; i++) {
+                  selectedCells[i] = data['cells'][i];
+                }
+                title = '$p1Name VS $p2Name';
                 return _widgetGameDashboard();
               }
             },
@@ -87,17 +92,25 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
-  _widgetGameLoading() {
-    return CircularProgressIndicator(
-      color: Colors.white,
-    );
+  _widgetGameLoading(String player1Name) {
+    return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+      Text('Hi $player1Name, we are waiting another player. Be patient!',
+      textAlign: TextAlign.center,
+      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+      Container(height: 20),
+      CircularProgressIndicator(color: Colors.white)
+    ]));
   }
 
   _widgetGameDashboard() {
     return Column(children: [
       Expanded(
           flex: 1,
-          child: Text('Miguel VS Kuba',
+          child: Text(title,
               textAlign: TextAlign.center,
               style: GoogleFonts.pressStart2p(
                   textStyle: TextStyle(color: Colors.white, fontSize: 20)))),
@@ -172,11 +185,16 @@ class _GamePageState extends State<GamePage> {
   _changeCellValue(int position) {
     setState(() {
       if (selectedCells[position] == 0) {
-        if (player1IsPlaying) {
+
+        if (playerNumber == 1) {
           selectedCells[position] = 1;
         } else {
           selectedCells[position] = 2;
         }
+
+        CollectionReference games = FirebaseFirestore.instance.collection('games');
+        games.doc(widget.gameId).set({'cells': selectedCells},
+            SetOptions(merge: true)).then((value2) {});
 
         if (_checkSolution()) {
           _showWinnerDialog();
